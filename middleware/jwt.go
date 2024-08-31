@@ -12,30 +12,17 @@ import (
 
 var jwtSecretKey []byte
 
-func Init() {
-	viper.SetConfigFile(".env")
-	viper.AddConfigPath(".")
-	viper.AutomaticEnv()
-
-	err := viper.ReadInConfig()
-	if err != nil {
-		log.Fatalf("Error reading .env file: %s", err)
-	}
-
+func GenerateJwt(UserId string) (string, error) {
 	secretKey := viper.GetString("JWT_SECRET_KEY")
 	if secretKey == "" {
 		log.Fatalf("JWT_SECRET_KEY not found in config or environment")
 	}
 
 	jwtSecretKey = []byte(secretKey)
-}
-
-func GenerateJwt(UserId string) (string, error) {
 	claims := jwt.MapClaims{
 		"userId": UserId,
 		"exp":    time.Now().Add(time.Hour * 24).Unix(),
 	}
-
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString(jwtSecretKey)
 }

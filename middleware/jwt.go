@@ -7,6 +7,7 @@ import (
 	jwtware "github.com/gofiber/contrib/jwt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/guneyeroglu/cine-corn-be/utils"
 	"github.com/spf13/viper"
 )
 
@@ -28,10 +29,7 @@ func GenerateJwt(UserId string) (string, error) {
 }
 
 func jwtErrorHandler(c *fiber.Ctx, err error) error {
-	return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-		"data":  nil,
-		"error": "Unauthorized",
-	})
+	return utils.Response(c, nil, fiber.StatusUnauthorized, "Unauthorized")
 }
 
 func JwtMiddleware() fiber.Handler {

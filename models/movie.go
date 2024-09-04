@@ -20,8 +20,7 @@ type MovieDetails struct {
 	Description string    `gorm:"type:text;not null" json:"description"`
 	ReleaseDate time.Time `gorm:"type:date;not null" json:"releaseDate"`
 	RunTime     string    `gorm:"size:3;not null" json:"runTime"`
-	GenreIDs    []uint    `gorm:"-" json:"-"`
-	Genres      []string  `gorm:"-" json:"genres"`
+	Genres      []Genre   `gorm:"many2many:movie_genres;" json:"genres"`
 	PosterImage string    `gorm:"not null" json:"posterImage"`
 	HeroImage   string    `gorm:"not null" json:"heroImage"`
 	IsFeatured  bool      `gorm:"not null" json:"isFeatured"`

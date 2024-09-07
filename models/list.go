@@ -8,3 +8,7 @@ type List struct {
 	MovieIds []uint    `gorm:"-" json:"-"`
 	Movies   []Movie   `gorm:"-" json:"movies"`
 }
+
+func (List) TableName() string {
+	return "lists"
+}

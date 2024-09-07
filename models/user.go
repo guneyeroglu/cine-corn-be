@@ -9,3 +9,7 @@ type User struct {
 	RoleID   uint      `gorm:"not null" json:"-"`
 	Role     Role      `gorm:"foreignKey:RoleID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT" json:"role"`
 }
+
+func (User) TableName() string {
+	return "users"
+}

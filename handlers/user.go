@@ -37,7 +37,7 @@ func validateInput(user *models.User) string {
 func Register(c *fiber.Ctx) error {
 	user := new(models.User)
 	if err := c.BodyParser(user); err != nil {
-		return utils.Response(c, nil, fiber.StatusBadRequest, "Cannot parse JSON")
+		return utils.Response(c, nil, fiber.StatusBadRequest, "Cannot parse JSON: "+err.Error())
 	}
 
 	if err := validateInput(user); err != "" {
@@ -45,8 +45,12 @@ func Register(c *fiber.Ctx) error {
 	}
 
 	var existingUser models.User
-	database.DB.Where("username = ?", user.Username).Find(&existingUser)
-	if existingUser.Username != "" {
+	result := database.DB.Where("username = ?", user.Username).Find(&existingUser)
+	if result.Error != nil {
+		return utils.Response(c, nil, fiber.StatusInternalServerError, "Database error: "+result.Error.Error())
+	}
+
+	if result.RowsAffected != 0 {
 		return utils.Response(c, nil, fiber.StatusConflict, "User already exist")
 	}
 
@@ -67,7 +71,7 @@ func Register(c *fiber.Ctx) error {
 func Login(c *fiber.Ctx) error {
 	user := new(models.User)
 	if err := c.BodyParser(user); err != nil {
-		return utils.Response(c, nil, fiber.StatusBadRequest, "Cannot parse JSON")
+		return utils.Response(c, nil, fiber.StatusBadRequest, "Cannot parse JSON: "+err.Error())
 	}
 
 	if err := validateInput(user); err != "" {
@@ -75,8 +79,12 @@ func Login(c *fiber.Ctx) error {
 	}
 
 	var existingUser models.User
-	database.DB.Joins("Role").Where("username = ?", user.Username).Find(&existingUser)
-	if existingUser.Username == "" {
+	result := database.DB.Joins("Role").Where("username = ?", user.Username).Find(&existingUser)
+	if result.Error != nil {
+		return utils.Response(c, nil, fiber.StatusInternalServerError, "Database error: "+result.Error.Error())
+	}
+
+	if result.RowsAffected == 0 {
 		return utils.Response(c, nil, fiber.StatusNotFound, "Username not found")
 	}
 
@@ -99,7 +107,7 @@ func Login(c *fiber.Ctx) error {
 	)
 }
 
-func AuthUser(c *fiber.Ctx) error {
+func GetAuthUser(c *fiber.Ctx) error {
 	tokenString := c.Get("Authorization")
 	if tokenString == "" {
 		return utils.Response(c, nil, fiber.StatusUnauthorized, "Token is required")

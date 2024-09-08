@@ -1,8 +1,6 @@
 package handlers
 
 import (
-	"log"
-
 	"github.com/gofiber/fiber/v2"
 	"github.com/guneyeroglu/cine-corn-be/database"
 	"github.com/guneyeroglu/cine-corn-be/models"
@@ -10,7 +8,7 @@ import (
 )
 
 func GetMoviesList(c *fiber.Ctx) error {
-	movies := new([]models.Movie)
+	var movies []models.Movie
 
 	query := database.DB
 	isFeatured := c.Query("isFeatured")
@@ -36,14 +34,13 @@ func GetMoviesList(c *fiber.Ctx) error {
 }
 
 func GetMovieDetailsList(c *fiber.Ctx) error {
-	movieDetails := new(models.MovieDetails)
-	MovieDetailsRequest := new(models.MovieDetailsRequest)
-	if err := c.BodyParser(MovieDetailsRequest); err != nil {
-		log.Println(err)
+	var movieDetails models.MovieDetails
+	var MovieDetailsRequest models.MovieDetailsRequest
+	if err := c.BodyParser(&MovieDetailsRequest); err != nil {
 		return utils.Response(c, nil, fiber.StatusBadRequest, "Cannot parse JSON: "+err.Error())
 	}
 
-	result := database.DB.Where("id = ?", MovieDetailsRequest.ID).Find(&movieDetails)
+	result := database.DB.Preload("Genres").Where("id = ?", MovieDetailsRequest.ID).Find(&movieDetails)
 	if result.Error != nil {
 		return utils.Response(c, nil, fiber.StatusInternalServerError, "Database error: "+result.Error.Error())
 	}
@@ -51,6 +48,13 @@ func GetMovieDetailsList(c *fiber.Ctx) error {
 	if result.RowsAffected == 0 {
 		return utils.Response(c, nil, fiber.StatusNotFound, "No movie details found")
 	}
+
+	var genreNames []string
+	for _, genre := range movieDetails.Genres {
+		genreNames = append(genreNames, genre.Name)
+	}
+
+	movieDetails.GenreNames = genreNames
 
 	return utils.Response(c, movieDetails, fiber.StatusOK, "Movie details retrieved successfully")
 }

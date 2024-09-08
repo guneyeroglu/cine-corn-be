@@ -35,12 +35,12 @@ func validateInput(user *models.User) string {
 }
 
 func Register(c *fiber.Ctx) error {
-	user := new(models.User)
-	if err := c.BodyParser(user); err != nil {
+	var user models.User
+	if err := c.BodyParser(&user); err != nil {
 		return utils.Response(c, nil, fiber.StatusBadRequest, "Cannot parse JSON: "+err.Error())
 	}
 
-	if err := validateInput(user); err != "" {
+	if err := validateInput(&user); err != "" {
 		return utils.Response(c, nil, fiber.StatusBadRequest, err)
 	}
 
@@ -69,12 +69,12 @@ func Register(c *fiber.Ctx) error {
 }
 
 func Login(c *fiber.Ctx) error {
-	user := new(models.User)
-	if err := c.BodyParser(user); err != nil {
+	var user (models.User)
+	if err := c.BodyParser(&user); err != nil {
 		return utils.Response(c, nil, fiber.StatusBadRequest, "Cannot parse JSON: "+err.Error())
 	}
 
-	if err := validateInput(user); err != "" {
+	if err := validateInput(&user); err != "" {
 		return utils.Response(c, nil, fiber.StatusBadRequest, err)
 	}
 

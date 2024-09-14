@@ -13,10 +13,11 @@ func Routes(app *fiber.App) {
 	api.Use(cors.New())
 	api.Post("/register", handlers.Register)
 	api.Post("/login", handlers.Login)
-	api.Get("/auth-user", handlers.GetAuthUser)
 	api.Get("/movies", handlers.GetMoviesList)
 	api.Post("/movie-details", handlers.GetMovieDetailsList)
 
 	// protected api
 	api.Use(middleware.JwtMiddleware())
+	api.Get("/auth-user", handlers.GetAuthUser)
+
 }

@@ -27,8 +27,8 @@ func validateInput(user *models.User) string {
 		return "Username must be between 3 and 20 characters"
 	}
 
-	if len(user.Password) < 8 || len(user.Password) > 16 {
-		return "Password must be between 8 and 16 characters"
+	if len(user.Password) < 6 || len(user.Password) > 16 {
+		return "Password must be between 6 and 16 characters"
 	}
 
 	return ""

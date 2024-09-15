@@ -12,15 +12,12 @@ import (
 	"github.com/spf13/viper"
 )
 
-var jwtSecretKey []byte
-
 func GenerateJwt(user *models.User) (string, error) {
 	secretKey := viper.GetString("JWT_SECRET_KEY")
 	if secretKey == "" {
 		return "", fmt.Errorf("JWT_SECRET_KEY not found in config or environment")
 	}
 
-	jwtSecretKey = []byte(secretKey)
 	claims := jwt.MapClaims{
 		"userId":   user.Id,
 		"username": user.Username,
@@ -28,7 +25,7 @@ func GenerateJwt(user *models.User) (string, error) {
 		"exp":      time.Now().Add(time.Hour * 24).Unix(),
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	signedStringToken, err := token.SignedString(jwtSecretKey)
+	signedStringToken, err := token.SignedString([]byte(secretKey))
 	if err != nil {
 		return "", fmt.Errorf("failed to sign token: %v", err)
 	}
@@ -37,12 +34,13 @@ func GenerateJwt(user *models.User) (string, error) {
 }
 
 func jwtErrorHandler(c *fiber.Ctx, err error) error {
-	return utils.Response(c, nil, fiber.StatusUnauthorized, "Unauthorized")
+	return utils.Response(c, nil, fiber.StatusUnauthorized, err.Error())
 }
 
 func JwtMiddleware() fiber.Handler {
+	secretKey := viper.GetString("JWT_SECRET_KEY")
 	return jwtware.New(jwtware.Config{
-		SigningKey:   jwtware.SigningKey{Key: jwtSecretKey},
+		SigningKey:   jwtware.SigningKey{Key: []byte(secretKey)},
 		ErrorHandler: jwtErrorHandler,
 	})
 }

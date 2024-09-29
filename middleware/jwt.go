@@ -19,7 +19,7 @@ func GenerateJwt(user *models.User) (string, error) {
 	}
 
 	claims := jwt.MapClaims{
-		"userId":   user.Id,
+		"userId":   user.ID,
 		"username": user.Username,
 		"role":     user.Role.Name,
 		"exp":      time.Now().Add(time.Hour * 24).Unix(),

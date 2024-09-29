@@ -8,10 +8,12 @@ import (
 )
 
 type Movie struct {
-	ID          uuid.UUID `gorm:"primaryKey;type:uuid;default:uuid_generate_v4()" json:"id"`
-	Name        string    `gorm:"size:50;not null" json:"name"`
-	Point       string    `gorm:"size:4;not null" json:"point"`
-	PosterImage string    `gorm:"type:text;not null" json:"posterImage"`
+	ID            uuid.UUID `gorm:"primaryKey;type:uuid;default:uuid_generate_v4()" json:"id"`
+	Name          string    `gorm:"size:50;not null" json:"name"`
+	Point         string    `gorm:"size:4;not null" json:"point"`
+	PosterImage   string    `gorm:"type:text;not null" json:"posterImage"`
+	IsFavorite    bool      `gorm:"-" json:"isFavorite"`
+	IsAddedToList bool      `gorm:"-" json:"isAddedToList"`
 }
 
 func (Movie) TableName() string {

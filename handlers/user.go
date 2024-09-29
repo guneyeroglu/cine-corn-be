@@ -124,6 +124,7 @@ func GetAuthUser(c *fiber.Ctx) error {
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 		return utils.Response(c, claims, fiber.StatusOK, "Authentication successful")
+
 	}
 
 	return utils.Response(c, nil, fiber.StatusUnauthorized, "Invalid or expired token")

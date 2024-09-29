@@ -17,7 +17,10 @@ func Routes(app *fiber.App) {
 	api.Post("/movie-details", handlers.GetMovieDetailsList)
 
 	// protected api
-	api.Use(middleware.JwtMiddleware())
-	api.Get("/auth-user", handlers.GetAuthUser)
+	protectedApi := api.Group("")
+	protectedApi.Use(middleware.JwtMiddleware())
+	protectedApi.Get("/auth-user", handlers.GetAuthUser)
+	protectedApi.Get("/favorites", handlers.GetFavoriteMovies)
+	protectedApi.Get("/my-list", handlers.GetListMovies)
 
 }

@@ -15,12 +15,12 @@ func GetFavoriteMovies(c *fiber.Ctx) error {
 
 	token, err := parseToken(c)
 	if err != nil || !token.Valid {
-		return utils.Response(c, nil, fiber.StatusUnauthorized, "Invalid or missing token")
+		return utils.Response(c, nil, fiber.StatusUnauthorized, "Unauthorized: Invalid or missing token.")
 	}
 
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok || !token.Valid {
-		return utils.Response(c, nil, fiber.StatusUnauthorized, "Invalid or expired token")
+		return utils.Response(c, nil, fiber.StatusUnauthorized, "Unauthorized: Invalid or expired token.")
 	}
 
 	userID := claims["userId"]
@@ -31,20 +31,20 @@ func GetFavoriteMovies(c *fiber.Ctx) error {
 		Pluck("movie_id", &favoriteMovieIDs)
 
 	if result.Error != nil {
-		return utils.Response(c, nil, fiber.StatusInternalServerError, "Failed to retrieve favorite movies")
+		return utils.Response(c, nil, fiber.StatusInternalServerError, "Server Error: Failed to retrieve favorite movies.")
 	}
 
 	if len(favoriteMovieIDs) == 0 {
-		return utils.Response(c, nil, fiber.StatusNotFound, "No favorite movies found")
+		return utils.Response(c, nil, fiber.StatusNotFound, "No movies found in your favorites.")
 	}
 
 	result = database.DB.Where("id IN ?", favoriteMovieIDs).Find(&movies)
 	if result.Error != nil {
-		return utils.Response(c, nil, fiber.StatusInternalServerError, "Failed to retrieve movies")
+		return utils.Response(c, nil, fiber.StatusInternalServerError, "Server Error: Failed to retrieve movies.")
 	}
 
 	if result.RowsAffected == 0 {
-		return utils.Response(c, nil, fiber.StatusNotFound, "No movies found")
+		return utils.Response(c, nil, fiber.StatusNotFound, "No movies found.")
 	}
 
 	var listMovieIDs []uuid.UUID
@@ -53,7 +53,7 @@ func GetFavoriteMovies(c *fiber.Ctx) error {
 		Pluck("movie_id", &listMovieIDs)
 
 	if result.Error != nil {
-		return utils.Response(c, nil, fiber.StatusInternalServerError, "Failed to retrieve list movies")
+		return utils.Response(c, nil, fiber.StatusInternalServerError, "Server Error: Failed to retrieve list movies.")
 	}
 
 	favMap := make(map[uuid.UUID]bool)
@@ -71,7 +71,7 @@ func GetFavoriteMovies(c *fiber.Ctx) error {
 		movies[i].IsAddedToList = listMap[movies[i].ID]
 	}
 
-	return utils.Response(c, movies, fiber.StatusOK, "Favorite movies retrieved successfully")
+	return utils.Response(c, movies, fiber.StatusOK, "Favorite movies retrieved successfully.")
 }
 
 func ToggleFavoriteMovie(c *fiber.Ctx) error {
@@ -100,7 +100,7 @@ func ToggleFavoriteMovie(c *fiber.Ctx) error {
 				return utils.Response(c, nil, fiber.StatusInternalServerError, "Server Error: Unable to add movie to favorites.")
 			}
 
-			return utils.Response(c, nil, fiber.StatusCreated, "Movie added to favorites")
+			return utils.Response(c, nil, fiber.StatusCreated, "Movie added to favorites successfully.")
 		}
 		return utils.Response(c, nil, fiber.StatusInternalServerError, "Server Error: Unable to retrieve favorite movie.")
 	}
@@ -109,5 +109,5 @@ func ToggleFavoriteMovie(c *fiber.Ctx) error {
 		return utils.Response(c, nil, fiber.StatusInternalServerError, "Server Error: Unable to remove movie from favorites.")
 	}
 
-	return utils.Response(c, nil, fiber.StatusOK, "Movie removed from favorites")
+	return utils.Response(c, nil, fiber.StatusOK, "Movie removed from favorites successfully.")
 }

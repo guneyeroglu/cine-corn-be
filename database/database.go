@@ -29,7 +29,7 @@ func ConnectDatabase() {
 		Logger: newLogger,
 	})
 	if err != nil {
-		log.Fatalf("Error: Unable to connect to the database. Please check your DSN and database server. Details: %v", err)
+		log.Fatalf("Connection Error: Unable to connect to the database. Please check your DSN and database server. Details: %v", err)
 	}
 
 	DB = db

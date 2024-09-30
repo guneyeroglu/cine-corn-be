@@ -34,7 +34,7 @@ func GenerateJwt(user *models.User) (string, error) {
 }
 
 func jwtErrorHandler(c *fiber.Ctx, err error) error {
-	return utils.Response(c, nil, fiber.StatusUnauthorized, "Unauthorized access: Invalid or expired token")
+	return utils.Response(c, nil, fiber.StatusUnauthorized, "Unauthorized: Invalid or expired token.")
 }
 
 func JwtMiddleware() fiber.Handler {

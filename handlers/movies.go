@@ -76,7 +76,7 @@ func GetMoviesList(c *fiber.Ctx) error {
 
 	result := query.Find(&movies)
 	if result.Error != nil {
-		return utils.Response(c, nil, fiber.StatusInternalServerError, "An error occurred while retrieving movies.")
+		return utils.Response(c, nil, fiber.StatusInternalServerError, "Server Error: An error occurred while retrieving movies.")
 	}
 
 	if result.RowsAffected == 0 {
@@ -111,12 +111,12 @@ func GetMovieDetailsList(c *fiber.Ctx) error {
 	var movieDetailsRequest models.MovieDetailsRequest
 
 	if err := c.BodyParser(&movieDetailsRequest); err != nil {
-		return utils.Response(c, nil, fiber.StatusBadRequest, "Invalid request format.")
+		return utils.Response(c, nil, fiber.StatusBadRequest, "Bad Request: Unable to parse request.")
 	}
 
 	result := database.DB.Preload("Genres").Where("id = ?", movieDetailsRequest.ID).Find(&movieDetails)
 	if result.Error != nil {
-		return utils.Response(c, nil, fiber.StatusInternalServerError, "An error occurred while retrieving movie details.")
+		return utils.Response(c, nil, fiber.StatusInternalServerError, "Server Error: An error occurred while retrieving movie details.")
 	}
 
 	if result.RowsAffected == 0 {

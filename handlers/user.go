@@ -32,7 +32,7 @@ func validateInput(user *models.User) string {
 func Register(c *fiber.Ctx) error {
 	var user models.User
 	if err := c.BodyParser(&user); err != nil {
-		return utils.Response(c, nil, fiber.StatusBadRequest, "Invalid input format.")
+		return utils.Response(c, nil, fiber.StatusBadRequest, "Bad Request: Unable to parse request.")
 	}
 
 	if err := validateInput(&user); err != "" {
@@ -42,7 +42,7 @@ func Register(c *fiber.Ctx) error {
 	var existingUser models.User
 	result := database.DB.Where("username = ?", user.Username).Find(&existingUser)
 	if result.Error != nil {
-		return utils.Response(c, nil, fiber.StatusInternalServerError, "Database error. Please try again later.")
+		return utils.Response(c, nil, fiber.StatusInternalServerError, "Server Error: Please try again later.")
 	}
 
 	if result.RowsAffected != 0 {
@@ -66,7 +66,7 @@ func Register(c *fiber.Ctx) error {
 func Login(c *fiber.Ctx) error {
 	var user models.User
 	if err := c.BodyParser(&user); err != nil {
-		return utils.Response(c, nil, fiber.StatusBadRequest, "Invalid input format.")
+		return utils.Response(c, nil, fiber.StatusBadRequest, "Bad Request: Unable to parse request.")
 	}
 
 	if err := validateInput(&user); err != "" {
@@ -76,7 +76,7 @@ func Login(c *fiber.Ctx) error {
 	var existingUser models.User
 	result := database.DB.Joins("Role").Where("username = ?", user.Username).Find(&existingUser)
 	if result.Error != nil {
-		return utils.Response(c, nil, fiber.StatusInternalServerError, "Database error. Please try again later.")
+		return utils.Response(c, nil, fiber.StatusInternalServerError, "Server Error: Please try again later.")
 	}
 
 	if result.RowsAffected == 0 {
@@ -89,7 +89,7 @@ func Login(c *fiber.Ctx) error {
 
 	res, err := middleware.GenerateJwt(&existingUser)
 	if err != nil {
-		return utils.Response(c, nil, fiber.StatusInternalServerError, "Error generating token. Please try again.")
+		return utils.Response(c, nil, fiber.StatusInternalServerError, "Server Error: Error generating token. Please try again.")
 	}
 
 	return utils.Response(
@@ -105,7 +105,7 @@ func Login(c *fiber.Ctx) error {
 func GetAuthUser(c *fiber.Ctx) error {
 	tokenString := c.Get("Authorization")
 	if tokenString == "" {
-		return utils.Response(c, nil, fiber.StatusUnauthorized, "Authorization token is required.")
+		return utils.Response(c, nil, fiber.StatusUnauthorized, "Unauthorized: Invalid or missing token.")
 	}
 
 	tokenString = strings.TrimPrefix(tokenString, "Bearer ")
@@ -114,12 +114,12 @@ func GetAuthUser(c *fiber.Ctx) error {
 		return []byte(secretKey), nil
 	})
 	if err != nil {
-		return utils.Response(c, nil, fiber.StatusUnauthorized, "Invalid token.")
+		return utils.Response(c, nil, fiber.StatusUnauthorized, "Unauthorized: Invalid or missing token.")
 	}
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 		return utils.Response(c, claims, fiber.StatusOK, "Authentication successful.")
 	}
 
-	return utils.Response(c, nil, fiber.StatusUnauthorized, "Invalid or expired token.")
+	return utils.Response(c, nil, fiber.StatusUnauthorized, "Unauthorized: Invalid or expired token.")
 }

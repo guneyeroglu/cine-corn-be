@@ -71,7 +71,7 @@ func GetListMovies(c *fiber.Ctx) error {
 		movies[i].IsAddedToList = listMap[movies[i].ID]
 	}
 
-	return utils.Response(c, movies, fiber.StatusOK, "Movies retrieved successfully.")
+	return utils.Response(c, movies, fiber.StatusOK, "List Movies retrieved successfully.")
 }
 
 func ToggleListMovie(c *fiber.Ctx) error {
@@ -100,7 +100,7 @@ func ToggleListMovie(c *fiber.Ctx) error {
 				return utils.Response(c, nil, fiber.StatusInternalServerError, "Server Error: Unable to add movie to list.")
 			}
 
-			return utils.Response(c, nil, fiber.StatusCreated, "Movie added to list.")
+			return utils.Response(c, nil, fiber.StatusCreated, "Movie added to list successfully.")
 		}
 		return utils.Response(c, nil, fiber.StatusInternalServerError, "Server Error: Unable to retrieve list movie.")
 	}
@@ -109,5 +109,5 @@ func ToggleListMovie(c *fiber.Ctx) error {
 		return utils.Response(c, nil, fiber.StatusInternalServerError, "Server Error: Unable to remove movie from list.")
 	}
 
-	return utils.Response(c, nil, fiber.StatusOK, "Movie removed from list.")
+	return utils.Response(c, nil, fiber.StatusOK, "Movie removed from list successfully.")
 }

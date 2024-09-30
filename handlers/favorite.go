@@ -24,7 +24,6 @@ func GetFavoriteMovies(c *fiber.Ctx) error {
 	}
 
 	userID := claims["userId"]
-
 	var favoriteMovieIDs []uuid.UUID
 	result := database.DB.Model(&models.UserFavoriteMovie{}).
 		Where("user_id = ?", userID).
@@ -89,11 +88,17 @@ func ToggleFavoriteMovie(c *fiber.Ctx) error {
 	var favoriteMovie models.UserFavoriteMovie
 	var favoriteMovieRequest models.UserFavoriteMovieRequest
 
+	userUUID, ok := userID.(string)
+	if !ok {
+		return utils.Response(c, nil, fiber.StatusInternalServerError, "Server Error: Invalid user ID format.")
+	}
+	favoriteMovieRequest.UserID = uuid.MustParse(userUUID)
+
 	if err := c.BodyParser(&favoriteMovieRequest); err != nil {
 		return utils.Response(c, nil, fiber.StatusBadRequest, "Bad Request: Unable to parse request.")
 	}
 
-	err = database.DB.Where("user_id = ? AND movie_id = ?", userID, favoriteMovieRequest.MovieID).First(&favoriteMovie).Error
+	err = database.DB.Where("user_id = ? AND movie_id = ?", favoriteMovieRequest.UserID, favoriteMovieRequest.MovieID).First(&favoriteMovie).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			if err := database.DB.Create(&favoriteMovieRequest).Error; err != nil {
@@ -105,7 +110,7 @@ func ToggleFavoriteMovie(c *fiber.Ctx) error {
 		return utils.Response(c, nil, fiber.StatusInternalServerError, "Server Error: Unable to retrieve favorite movie.")
 	}
 
-	if err := database.DB.Where("user_id = ? AND movie_id = ?", userID, favoriteMovieRequest.MovieID).Delete(&models.UserFavoriteMovie{}).Error; err != nil {
+	if err := database.DB.Where("user_id = ? AND movie_id = ?", favoriteMovieRequest.UserID, favoriteMovieRequest.MovieID).Delete(&models.UserFavoriteMovie{}).Error; err != nil {
 		return utils.Response(c, nil, fiber.StatusInternalServerError, "Server Error: Unable to remove movie from favorites.")
 	}
 

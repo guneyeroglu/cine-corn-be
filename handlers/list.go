@@ -24,7 +24,6 @@ func GetListMovies(c *fiber.Ctx) error {
 	}
 
 	userID := claims["userId"]
-
 	var listMovieIDs []uuid.UUID
 	result := database.DB.Model(&models.UserListMovie{}).
 		Where("user_id = ?", userID).
@@ -87,16 +86,22 @@ func ToggleListMovie(c *fiber.Ctx) error {
 
 	userID := claims["userId"]
 	var listMovie models.UserListMovie
-	var userMovieRequest models.UserListMovieRequest
+	var listMovieRequest models.UserListMovieRequest
 
-	if err := c.BodyParser(&userMovieRequest); err != nil {
+	userUUID, ok := userID.(string)
+	if !ok {
+		return utils.Response(c, nil, fiber.StatusInternalServerError, "Server Error: Invalid user ID format.")
+	}
+	listMovieRequest.UserID = uuid.MustParse(userUUID)
+
+	if err := c.BodyParser(&listMovieRequest); err != nil {
 		return utils.Response(c, nil, fiber.StatusBadRequest, "Bad Request: Unable to parse request.")
 	}
 
-	err = database.DB.Where("user_id = ? AND movie_id = ?", userID, userMovieRequest.MovieID).First(&listMovie).Error
+	err = database.DB.Where("user_id = ? AND movie_id = ?", listMovieRequest.UserID, listMovieRequest.MovieID).First(&listMovie).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			if err := database.DB.Create(&userMovieRequest).Error; err != nil {
+			if err := database.DB.Create(&listMovieRequest).Error; err != nil {
 				return utils.Response(c, nil, fiber.StatusInternalServerError, "Server Error: Unable to add movie to list.")
 			}
 
@@ -105,7 +110,7 @@ func ToggleListMovie(c *fiber.Ctx) error {
 		return utils.Response(c, nil, fiber.StatusInternalServerError, "Server Error: Unable to retrieve list movie.")
 	}
 
-	if err := database.DB.Delete(&userMovieRequest).Error; err != nil {
+	if err := database.DB.Where("user_id = ? AND movie_id = ?", listMovieRequest.UserID, listMovieRequest.MovieID).Delete(&listMovieRequest).Error; err != nil {
 		return utils.Response(c, nil, fiber.StatusInternalServerError, "Server Error: Unable to remove movie from list.")
 	}
 

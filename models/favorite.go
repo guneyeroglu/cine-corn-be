@@ -13,6 +13,7 @@ func (UserFavoriteMovie) TableName() string {
 }
 
 type UserFavoriteMovieRequest struct {
+	UserID  uuid.UUID `gorm:"type:uuid;not null" json:"-"`
 	MovieID uuid.UUID `gorm:"type:uuid;not null" json:"movieId"`
 }
 

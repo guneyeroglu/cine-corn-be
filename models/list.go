@@ -13,6 +13,7 @@ func (UserListMovie) TableName() string {
 }
 
 type UserListMovieRequest struct {
+	UserID  uuid.UUID `gorm:"type:uuid;not null" json:"-"`
 	MovieID uuid.UUID `gorm:"type:uuid;not null" json:"movieId"`
 }
 

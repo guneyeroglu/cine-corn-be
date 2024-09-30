@@ -21,6 +21,8 @@ func Routes(app *fiber.App) {
 	protectedApi.Use(middleware.JwtMiddleware())
 	protectedApi.Get("/auth-user", handlers.GetAuthUser)
 	protectedApi.Get("/favorites", handlers.GetFavoriteMovies)
-	protectedApi.Get("/my-list", handlers.GetListMovies)
+	protectedApi.Put("/favorites", handlers.ToggleFavoriteMovie)
+	protectedApi.Get("/list", handlers.GetListMovies)
+	protectedApi.Put("/list", handlers.ToggleListMovie)
 
 }

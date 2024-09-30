@@ -15,29 +15,24 @@ import (
 
 func validateInput(user *models.User) string {
 	if strings.Contains(user.Username, " ") {
-		return "Username must not contain spaces"
-
+		return "Username must not contain spaces."
 	}
 	if strings.Contains(user.Password, " ") {
-		return "Password must not contain spaces"
-
+		return "Password must not contain spaces."
 	}
-
 	if len(user.Username) < 3 || len(user.Username) > 20 {
-		return "Username must be between 3 and 20 characters"
+		return "Username must be between 3 and 20 characters."
 	}
-
 	if len(user.Password) < 6 || len(user.Password) > 16 {
-		return "Password must be between 6 and 16 characters"
+		return "Password must be between 6 and 16 characters."
 	}
-
 	return ""
 }
 
 func Register(c *fiber.Ctx) error {
 	var user models.User
 	if err := c.BodyParser(&user); err != nil {
-		return utils.Response(c, nil, fiber.StatusBadRequest, "Cannot parse JSON: "+err.Error())
+		return utils.Response(c, nil, fiber.StatusBadRequest, "Invalid input format.")
 	}
 
 	if err := validateInput(&user); err != "" {
@@ -47,31 +42,31 @@ func Register(c *fiber.Ctx) error {
 	var existingUser models.User
 	result := database.DB.Where("username = ?", user.Username).Find(&existingUser)
 	if result.Error != nil {
-		return utils.Response(c, nil, fiber.StatusInternalServerError, "Database error: "+result.Error.Error())
+		return utils.Response(c, nil, fiber.StatusInternalServerError, "Database error. Please try again later.")
 	}
 
 	if result.RowsAffected != 0 {
-		return utils.Response(c, nil, fiber.StatusConflict, "User already exist")
+		return utils.Response(c, nil, fiber.StatusConflict, "Username already exists.")
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
-		return utils.Response(c, nil, fiber.StatusInternalServerError, "Failed to hash password")
+		return utils.Response(c, nil, fiber.StatusInternalServerError, "Error while hashing password. Please try again.")
 	}
 
 	user.Password = string(hashedPassword)
 	user.RoleID = 2
 	if err := database.DB.Create(&user).Error; err != nil {
-		return utils.Response(c, nil, fiber.StatusInternalServerError, "Failed to create user")
+		return utils.Response(c, nil, fiber.StatusInternalServerError, "Error while creating user. Please try again.")
 	}
 
-	return utils.Response(c, nil, fiber.StatusCreated, "User created successfully")
+	return utils.Response(c, nil, fiber.StatusCreated, "User registered successfully.")
 }
 
 func Login(c *fiber.Ctx) error {
-	var user (models.User)
+	var user models.User
 	if err := c.BodyParser(&user); err != nil {
-		return utils.Response(c, nil, fiber.StatusBadRequest, "Cannot parse JSON: "+err.Error())
+		return utils.Response(c, nil, fiber.StatusBadRequest, "Invalid input format.")
 	}
 
 	if err := validateInput(&user); err != "" {
@@ -81,20 +76,20 @@ func Login(c *fiber.Ctx) error {
 	var existingUser models.User
 	result := database.DB.Joins("Role").Where("username = ?", user.Username).Find(&existingUser)
 	if result.Error != nil {
-		return utils.Response(c, nil, fiber.StatusInternalServerError, "Database error: "+result.Error.Error())
+		return utils.Response(c, nil, fiber.StatusInternalServerError, "Database error. Please try again later.")
 	}
 
 	if result.RowsAffected == 0 {
-		return utils.Response(c, nil, fiber.StatusNotFound, "Username not found")
+		return utils.Response(c, nil, fiber.StatusNotFound, "Username not found.")
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(existingUser.Password), []byte(user.Password)); err != nil {
-		return utils.Response(c, nil, fiber.StatusUnauthorized, "Incorrect password")
+		return utils.Response(c, nil, fiber.StatusUnauthorized, "Incorrect password.")
 	}
 
 	res, err := middleware.GenerateJwt(&existingUser)
 	if err != nil {
-		return utils.Response(c, nil, fiber.StatusInternalServerError, err.Error())
+		return utils.Response(c, nil, fiber.StatusInternalServerError, "Error generating token. Please try again.")
 	}
 
 	return utils.Response(
@@ -103,14 +98,14 @@ func Login(c *fiber.Ctx) error {
 			"token": res,
 		},
 		fiber.StatusOK,
-		"Successfully logged in",
+		"Login successful.",
 	)
 }
 
 func GetAuthUser(c *fiber.Ctx) error {
 	tokenString := c.Get("Authorization")
 	if tokenString == "" {
-		return utils.Response(c, nil, fiber.StatusUnauthorized, "Token is required")
+		return utils.Response(c, nil, fiber.StatusUnauthorized, "Authorization token is required.")
 	}
 
 	tokenString = strings.TrimPrefix(tokenString, "Bearer ")
@@ -119,13 +114,12 @@ func GetAuthUser(c *fiber.Ctx) error {
 		return []byte(secretKey), nil
 	})
 	if err != nil {
-		return utils.Response(c, nil, fiber.StatusUnauthorized, "Invalid token")
+		return utils.Response(c, nil, fiber.StatusUnauthorized, "Invalid token.")
 	}
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		return utils.Response(c, claims, fiber.StatusOK, "Authentication successful")
-
+		return utils.Response(c, claims, fiber.StatusOK, "Authentication successful.")
 	}
 
-	return utils.Response(c, nil, fiber.StatusUnauthorized, "Invalid or expired token")
+	return utils.Response(c, nil, fiber.StatusUnauthorized, "Invalid or expired token.")
 }

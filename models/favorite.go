@@ -11,3 +11,11 @@ type UserFavoriteMovie struct {
 func (UserFavoriteMovie) TableName() string {
 	return "user_favorite_movies"
 }
+
+type UserFavoriteMovieRequest struct {
+	MovieID uuid.UUID `gorm:"type:uuid;not null" json:"movieId"`
+}
+
+func (UserFavoriteMovieRequest) TableName() string {
+	return "user_favorite_movies"
+}

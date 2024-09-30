@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"log"
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
@@ -77,17 +76,17 @@ func GetMoviesList(c *fiber.Ctx) error {
 
 	result := query.Find(&movies)
 	if result.Error != nil {
-		return utils.Response(c, nil, fiber.StatusInternalServerError, result.Error.Error())
+		return utils.Response(c, nil, fiber.StatusInternalServerError, "An error occurred while retrieving movies.")
 	}
 
 	if result.RowsAffected == 0 {
-		return utils.Response(c, nil, fiber.StatusNotFound, "No movies found")
+		return utils.Response(c, nil, fiber.StatusNotFound, "No movies found.")
 	}
 
 	token, err := parseToken(c)
 	if err != nil || !token.Valid {
 		setMoviesDefaultState(movies)
-		return utils.Response(c, movies, fiber.StatusOK, "Movies retrieved successfully")
+		return utils.Response(c, movies, fiber.StatusOK, "Movies retrieved successfully.")
 	}
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
@@ -95,7 +94,7 @@ func GetMoviesList(c *fiber.Ctx) error {
 		favMap, listMap, err := getUserMovieIDs(userID)
 		if err != nil {
 			setMoviesDefaultState(movies)
-			return utils.Response(c, movies, fiber.StatusOK, "Movies retrieved successfully, but failed to retrieve favorite or list movies")
+			return utils.Response(c, movies, fiber.StatusOK, "Movies retrieved successfully, but failed to retrieve favorite or list movies.")
 		}
 
 		for i := range movies {
@@ -104,24 +103,24 @@ func GetMoviesList(c *fiber.Ctx) error {
 		}
 	}
 
-	return utils.Response(c, movies, fiber.StatusOK, "Movies retrieved successfully")
+	return utils.Response(c, movies, fiber.StatusOK, "Movies retrieved successfully.")
 }
 
 func GetMovieDetailsList(c *fiber.Ctx) error {
 	var movieDetails models.MovieDetails
-	var MovieDetailsRequest models.MovieDetailsRequest
+	var movieDetailsRequest models.MovieDetailsRequest
 
-	if err := c.BodyParser(&MovieDetailsRequest); err != nil {
-		return utils.Response(c, nil, fiber.StatusBadRequest, "Cannot parse JSON: "+err.Error())
+	if err := c.BodyParser(&movieDetailsRequest); err != nil {
+		return utils.Response(c, nil, fiber.StatusBadRequest, "Invalid request format.")
 	}
 
-	result := database.DB.Preload("Genres").Where("id = ?", MovieDetailsRequest.ID).Find(&movieDetails)
+	result := database.DB.Preload("Genres").Where("id = ?", movieDetailsRequest.ID).Find(&movieDetails)
 	if result.Error != nil {
-		return utils.Response(c, nil, fiber.StatusInternalServerError, "Database error: "+result.Error.Error())
+		return utils.Response(c, nil, fiber.StatusInternalServerError, "An error occurred while retrieving movie details.")
 	}
 
 	if result.RowsAffected == 0 {
-		return utils.Response(c, nil, fiber.StatusNotFound, "No movie details found")
+		return utils.Response(c, nil, fiber.StatusNotFound, "Movie details not found.")
 	}
 
 	var genreNames []string
@@ -133,31 +132,32 @@ func GetMovieDetailsList(c *fiber.Ctx) error {
 	token, err := parseToken(c)
 	if err != nil || !token.Valid {
 		setMovieDefaultState(&movieDetails)
-		return utils.Response(c, movieDetails, fiber.StatusOK, "Movie details retrieved successfully")
+		return utils.Response(c, movieDetails, fiber.StatusOK, "Movie details retrieved successfully.")
 	}
 
-	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		userID := claims["userId"]
-
-		var favoriteCount, listCount int64
-		favErr := database.DB.Model(&models.UserFavoriteMovie{}).
-			Where("user_id = ? AND movie_id = ?", userID, MovieDetailsRequest.ID).
-			Count(&favoriteCount).Error
-
-		listErr := database.DB.Model(&models.UserListMovie{}).
-			Where("user_id = ? AND movie_id = ?", userID, MovieDetailsRequest.ID).
-			Count(&listCount).Error
-
-		if favErr != nil || listErr != nil {
-			setMovieDefaultState(&movieDetails)
-			return utils.Response(c, movieDetails, fiber.StatusOK, "Movie details retrieved successfully")
-		}
-
-		movieDetails.IsFavorite = favoriteCount > 0
-		movieDetails.IsAddedToList = listCount > 0
-
-		log.Println(userID, MovieDetailsRequest.ID)
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok || !token.Valid {
+		return utils.Response(c, movieDetails, fiber.StatusOK, "Movie details retrieved successfully.")
 	}
 
-	return utils.Response(c, movieDetails, fiber.StatusOK, "Movie details retrieved successfully")
+	userID := claims["userId"]
+
+	var favoriteCount, listCount int64
+	favErr := database.DB.Model(&models.UserFavoriteMovie{}).
+		Where("user_id = ? AND movie_id = ?", userID, movieDetailsRequest.ID).
+		Count(&favoriteCount).Error
+
+	listErr := database.DB.Model(&models.UserListMovie{}).
+		Where("user_id = ? AND movie_id = ?", userID, movieDetailsRequest.ID).
+		Count(&listCount).Error
+
+	if favErr != nil || listErr != nil {
+		setMovieDefaultState(&movieDetails)
+		return utils.Response(c, movieDetails, fiber.StatusOK, "Movie details retrieved successfully.")
+	}
+
+	movieDetails.IsFavorite = favoriteCount > 0
+	movieDetails.IsAddedToList = listCount > 0
+
+	return utils.Response(c, movieDetails, fiber.StatusOK, "Movie details retrieved successfully.")
 }

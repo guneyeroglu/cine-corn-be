@@ -15,7 +15,7 @@ import (
 func GenerateJwt(user *models.User) (string, error) {
 	secretKey := viper.GetString("JWT_SECRET_KEY")
 	if secretKey == "" {
-		return "", fmt.Errorf("JWT_SECRET_KEY not found in config or environment")
+		return "", fmt.Errorf("JWT secret key is missing in the configuration")
 	}
 
 	claims := jwt.MapClaims{
@@ -27,14 +27,14 @@ func GenerateJwt(user *models.User) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	signedStringToken, err := token.SignedString([]byte(secretKey))
 	if err != nil {
-		return "", fmt.Errorf("failed to sign token: %v", err)
+		return "", fmt.Errorf("failed to sign the JWT token")
 	}
 
 	return signedStringToken, nil
 }
 
 func jwtErrorHandler(c *fiber.Ctx, err error) error {
-	return utils.Response(c, nil, fiber.StatusUnauthorized, err.Error())
+	return utils.Response(c, nil, fiber.StatusUnauthorized, "Unauthorized access: Invalid or expired token")
 }
 
 func JwtMiddleware() fiber.Handler {

@@ -12,7 +12,7 @@ func Init() {
 
 	err := viper.ReadInConfig()
 	if err != nil {
-		log.Println("No .env file found, using environment variables instead")
+		log.Println("Warning: .env file not found. Falling back to environment variables.")
 		viper.AutomaticEnv()
 	}
 }
